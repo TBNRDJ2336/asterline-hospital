@@ -1,0 +1,816 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Asterline Hospital</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: dark full-bleed 3D stage hero (helix + cross) over a cool clinical page; department tiles, a numbered booking console with a live slip, and an operations console (bed map, chart, ER queue). */
+:root{
+  --bg:#EAF3F2;
+  --surface:#FFFFFF;
+  --surface-2:#DCEBE9;
+  --fg:#0A2A31;
+  --muted:#4A666B;
+  --line:#C3D8D6;
+  --accent:#0B7A85;
+  --accent-ink:#FFFFFF;
+  --accent-soft:rgba(11,122,133,.12);
+  --signal:#D63F2E;
+  --signal-ink:#FFFFFF;
+  --bar:rgba(234,243,242,.84);
+  --stage:#04171C;
+  --stage-fg:#E6F6F5;
+  --stage-muted:#8FB9BD;
+  --stage-accent:#4FE0E8;
+  --stage-line:rgba(143,185,189,.28);
+  --ok:#16825A; --ok-bg:rgba(22,130,90,.12);
+  --warn:#9C640A; --warn-bg:rgba(156,100,10,.13);
+  --crit:#C93A2F; --crit-bg:rgba(201,58,47,.12);
+  --info:#2468A8; --info-bg:rgba(36,104,168,.12);
+  --shadow:0 1px 2px rgba(10,42,49,.06),0 18px 40px -18px rgba(10,42,49,.28);
+  --f-display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --f-body:'Figtree','Segoe UI',system-ui,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#051A1F; --surface:#0B2830; --surface-2:#123740; --fg:#E3F2F1; --muted:#8EB0B4; --line:#1F4650;
+    --accent:#3CC4CF; --accent-ink:#04252A; --accent-soft:rgba(60,196,207,.16);
+    --signal:#FF7A68; --signal-ink:#2A0A06; --bar:rgba(5,26,31,.84);
+    --ok:#4CD39B; --ok-bg:rgba(76,211,155,.14);
+    --warn:#F0B84A; --warn-bg:rgba(240,184,74,.14);
+    --crit:#FF8A7A; --crit-bg:rgba(255,138,122,.15);
+    --info:#6BB3F0; --info-bg:rgba(107,179,240,.15);
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 18px 40px -18px rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#051A1F; --surface:#0B2830; --surface-2:#123740; --fg:#E3F2F1; --muted:#8EB0B4; --line:#1F4650;
+  --accent:#3CC4CF; --accent-ink:#04252A; --accent-soft:rgba(60,196,207,.16);
+  --signal:#FF7A68; --signal-ink:#2A0A06; --bar:rgba(5,26,31,.84);
+  --ok:#4CD39B; --ok-bg:rgba(76,211,155,.14);
+  --warn:#F0B84A; --warn-bg:rgba(240,184,74,.14);
+  --crit:#FF8A7A; --crit-bg:rgba(255,138,122,.15);
+  --info:#6BB3F0; --info-bg:rgba(107,179,240,.15);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 18px 40px -18px rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+body{background:var(--bg);color:var(--fg);font:400 16px/1.55 var(--f-body);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+h1,h2,h3,h4,p,dl,dd,fieldset,legend{margin:0;padding:0}
+fieldset{border:0;min-width:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1240px;margin-inline:auto;padding-inline:clamp(16px,4vw,40px)}
+.mono{font-family:var(--f-mono)}
+.num{font-variant-numeric:tabular-nums}
+
+/* header */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--bar);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.bar-in{display:flex;align-items:center;gap:16px;padding-block:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--f-display);font-weight:700;font-size:1.25rem;letter-spacing:-.01em}
+.brand small{display:block;font:500 .66rem/1 var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+.brand svg{flex:none}
+.nav{display:flex;gap:4px;margin-left:auto}
+.nav a{padding:8px 14px;border-radius:999px;text-decoration:none;font-weight:500;font-size:.95rem;color:var(--muted)}
+.nav a:hover{background:var(--accent-soft);color:var(--fg)}
+.bar-act{display:flex;align-items:center;gap:8px}
+.sos{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:var(--signal);color:var(--signal-ink);font-weight:700;font-size:.9rem;text-decoration:none}
+.sos i{width:8px;height:8px;border-radius:50%;background:currentColor;display:block;animation:beat 1.6s ease-in-out infinite}
+@keyframes beat{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+.icon-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center}
+.icon-btn:hover{border-color:var(--accent)}
+@media (max-width:760px){
+  .nav{order:3;width:100%;margin-left:0;overflow-x:auto;padding-bottom:2px}
+  .bar-act{margin-left:auto}
+}
+
+/* hero */
+.hero{background:radial-gradient(1100px 600px at 82% 40%,rgba(79,224,232,.16),transparent 60%),radial-gradient(700px 500px at 5% 0%,rgba(255,106,88,.10),transparent 60%),var(--stage);color:var(--stage-fg);position:relative;overflow:hidden}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:clamp(16px,4vw,56px);align-items:center;padding-block:clamp(36px,6vw,80px)}
+.eyebrow{font:500 .76rem/1.2 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--stage-accent);margin-bottom:18px}
+.hero h1{font-family:var(--f-display);font-weight:700;font-size:clamp(2.5rem,5.6vw,4.7rem);line-height:1.02;letter-spacing:-.025em;text-wrap:balance}
+.hero h1 span{color:var(--stage-accent)}
+.lede{margin-top:20px;font-size:clamp(1.02rem,1.6vw,1.2rem);color:var(--stage-muted);max-width:52ch}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 22px;border-radius:12px;border:1px solid transparent;font-weight:700;font-size:1rem;text-decoration:none;line-height:1.1}
+.btn-signal{background:var(--signal);color:var(--signal-ink)}
+.btn-signal:hover{filter:brightness(1.07)}
+.btn-ghost{border-color:var(--stage-line);color:var(--stage-fg)}
+.btn-ghost:hover{border-color:var(--stage-accent)}
+.live{display:flex;flex-wrap:wrap;gap:12px 36px;margin-top:40px;padding-top:24px;border-top:1px solid var(--stage-line)}
+.live div{min-width:0}
+.live dt{font:500 .7rem/1.2 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--stage-muted)}
+.live dd{font:700 2rem/1.1 var(--f-display);margin-top:6px;font-variant-numeric:tabular-nums}
+.live dd small{font:500 .9rem var(--f-body);color:var(--stage-muted);margin-left:4px}
+.live-note{font:400 .72rem var(--f-mono);color:var(--stage-muted);margin-top:14px}
+#stage3d{position:relative;width:100%;aspect-ratio:1/1.04;max-height:660px;min-width:0}
+#stage3d canvas{display:block;width:100%;height:100%}
+#stage3d.nogl{background:radial-gradient(circle at 50% 50%,rgba(79,224,232,.35),transparent 55%)}
+@media (max-width:860px){
+  .hero-grid{grid-template-columns:minmax(0,1fr)}
+  #stage3d{max-width:520px;margin-inline:auto;aspect-ratio:1/1}
+}
+
+/* sections */
+.sec{padding-block:clamp(56px,8vw,104px)}
+.sec-alt{background:var(--surface-2)}
+.sec-h{display:grid;gap:12px;max-width:62ch;margin-bottom:clamp(28px,4vw,48px)}
+.sec-h .tag{font:500 .76rem/1.2 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.sec-h h2{font-family:var(--f-display);font-weight:700;font-size:clamp(1.9rem,3.8vw,3rem);line-height:1.05;letter-spacing:-.02em;text-wrap:balance}
+.sec-h p{color:var(--muted);font-size:1.06rem}
+
+/* departments */
+.dept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;perspective:1100px}
+.dept{display:flex;flex-direction:column;gap:14px;text-align:left;padding:22px;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);transition:transform .25s ease,border-color .2s ease;transform-style:preserve-3d;will-change:transform;min-width:0}
+.dept:hover{border-color:var(--accent)}
+.dept .ico{width:48px;height:48px;border-radius:14px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;transform:translateZ(28px)}
+.dept h3{font-family:var(--f-display);font-weight:700;font-size:1.28rem;letter-spacing:-.01em;transform:translateZ(18px)}
+.dept p{color:var(--muted);font-size:.95rem}
+.dept .meta{margin-top:auto;display:flex;justify-content:space-between;gap:8px;font:500 .74rem/1.3 var(--f-mono);color:var(--muted);padding-top:12px;border-top:1px dashed var(--line)}
+.dept .meta b{color:var(--accent);font-weight:500}
+
+/* booking */
+.book-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:clamp(20px,3vw,40px);align-items:start}
+.book-form{display:grid;gap:30px;min-width:0}
+.book-form legend{display:flex;align-items:center;gap:10px;font:700 1.05rem var(--f-display);margin-bottom:14px}
+.step{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--fg);color:var(--bg);font:500 .78rem var(--f-mono)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:9px 15px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:.92rem}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.docs{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.doc{display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--surface);text-align:left;min-width:0}
+.doc:hover{border-color:var(--accent)}
+.doc[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.av{flex:none;width:46px;height:46px;border-radius:50%;background:var(--surface-2);color:var(--accent);display:grid;place-items:center;font:700 1rem var(--f-display)}
+.doc b{display:block;font-weight:700;line-height:1.25}
+.doc span{display:block;color:var(--muted);font-size:.84rem;line-height:1.35}
+.dates{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.date{display:grid;gap:2px;justify-items:center;padding:10px 4px;border-radius:12px;border:1px solid var(--line);background:var(--surface)}
+.date small{font:500 .68rem var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.date b{font:700 1.25rem var(--f-display);font-variant-numeric:tabular-nums}
+.date[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.date[aria-pressed="true"] small{color:inherit;opacity:.8}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+.slot{padding:10px 6px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font:500 .88rem var(--f-mono);font-variant-numeric:tabular-nums}
+.slot:hover:not(:disabled){border-color:var(--accent)}
+.slot[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.slot:disabled{opacity:.45;cursor:not-allowed;text-decoration:line-through}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.field{display:grid;gap:6px;min-width:0}
+.field label{font-weight:600;font-size:.88rem}
+.field input,.field select{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);min-height:46px}
+.field input:focus,.field select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.ticket{position:sticky;top:calc(env(safe-area-inset-top,0px) + 88px);background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;min-width:0}
+.ticket-h{background:var(--stage);color:var(--stage-fg);padding:20px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.ticket-h b{font:700 1.15rem var(--f-display)}
+.ticket-h span{font:500 .7rem var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--stage-accent)}
+.ticket-b{padding:20px 22px 24px;display:grid;gap:14px}
+.ticket dl{display:grid;gap:0}
+.ticket dl div{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.ticket dt{color:var(--muted);font-size:.88rem}
+.ticket dd{font-weight:600;text-align:right;min-width:0;overflow-wrap:anywhere}
+.ticket dd.empty{color:var(--muted);font-weight:400}
+.ticket .btn{width:100%}
+.ticket .btn-signal{margin-top:6px}
+.note{font-size:.82rem;color:var(--muted)}
+#formMsg{color:var(--crit);font-weight:600;font-size:.9rem;min-height:1.3em}
+.ref{font:500 1.7rem/1.1 var(--f-mono);letter-spacing:.06em;padding:14px;border-radius:12px;background:var(--accent-soft);color:var(--accent);text-align:center;user-select:all}
+.btn-line{border-color:var(--line);background:transparent}
+.btn-line:hover{border-color:var(--accent)}
+@media (max-width:980px){.book-grid{grid-template-columns:minmax(0,1fr)}.ticket{position:static}}
+@media (max-width:520px){.dates{gap:5px}.date b{font-size:1.05rem}}
+
+/* console */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:16px}
+.kpi{padding:18px 20px;border-radius:16px;background:var(--surface);border:1px solid var(--line);min-width:0}
+.kpi dt{font:500 .7rem/1.2 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.kpi dd{font:700 2.4rem/1.1 var(--f-display);margin-top:8px;font-variant-numeric:tabular-nums}
+.kpi dd small{font:500 .9rem var(--f-body);color:var(--muted);margin-left:4px}
+.kpi .bar-m{height:6px;border-radius:99px;background:var(--surface-2);margin-top:12px;overflow:hidden}
+.kpi .bar-m i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.cgrid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;min-width:0;box-shadow:var(--shadow)}
+.panel-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px 20px;margin-bottom:18px}
+.panel h3{font:700 1.15rem var(--f-display)}
+.p-beds{grid-column:span 7}
+.p-chart{grid-column:span 5}
+.p-queue{grid-column:span 12}
+@media (max-width:1020px){.p-beds,.p-chart,.p-queue{grid-column:span 12}}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:14px;border-radius:4px;border:1.5px solid transparent;display:inline-block}
+.wards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px 24px}
+.ward h4{font:500 .76rem var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;justify-content:space-between}
+.beds{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.bed{aspect-ratio:1/.9;border-radius:8px;border:1.5px solid var(--line);background:transparent;font:500 .66rem var(--f-mono);padding:0;display:grid;place-items:center;min-width:0}
+.bed[data-s="occupied"],.sw.occupied{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.bed[data-s="available"],.sw.available{border-color:var(--ok);background:var(--ok-bg)}
+.bed[data-s="cleaning"],.sw.cleaning{border-color:var(--warn);background:repeating-linear-gradient(135deg,var(--warn-bg) 0 4px,transparent 4px 8px)}
+.bed[data-s="reserved"],.sw.reserved{border-style:dashed;border-color:var(--info);background:var(--info-bg)}
+.bed[aria-pressed="true"]{outline:2.5px solid var(--fg);outline-offset:2px}
+.bed:hover{filter:brightness(1.08)}
+.bed-detail{margin-top:22px;padding:16px 18px;border-radius:14px;background:var(--bg);display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px 18px}
+.bed-detail div{min-width:0}
+.bed-detail dt{font:500 .68rem var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.bed-detail dd{font-weight:600;margin-top:2px;overflow-wrap:anywhere}
+.chart-legend{display:flex;gap:16px;font-size:.84rem;color:var(--muted);margin-bottom:6px;flex-wrap:wrap}
+.chart-legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+#chart svg{display:block;width:100%;height:auto}
+#chart .grid{stroke:var(--line);stroke-width:1}
+#chart .tick{fill:var(--muted);font:400 11px var(--f-mono)}
+#chart .l-adm{fill:none;stroke:var(--accent);stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round}
+#chart .l-dis{fill:none;stroke:var(--signal);stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round;stroke-dasharray:1 0}
+#chart .a-adm{fill:var(--accent);opacity:.14}
+#chart .dot-adm{fill:var(--accent);stroke:var(--surface);stroke-width:2}
+#chart .dot-dis{fill:var(--signal);stroke:var(--surface);stroke-width:2}
+#chart .val{font:500 12px var(--f-mono)}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.tbl-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th{text-align:left;font:500 .7rem var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:12px 16px;background:var(--bg);white-space:nowrap}
+td{padding:13px 16px;border-top:1px solid var(--line);font-size:.94rem;white-space:nowrap}
+td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-weight:700;font-size:.78rem}
+.pill::before{content:"";width:7px;height:7px;background:currentColor}
+.pill.crit{background:var(--crit-bg);color:var(--crit)}
+.pill.crit::before{border-radius:0;transform:rotate(45deg)}
+.pill.urg{background:var(--warn-bg);color:var(--warn)}
+.pill.urg::before{clip-path:polygon(50% 0,100% 100%,0 100%)}
+.pill.std{background:var(--info-bg);color:var(--info)}
+.pill.std::before{border-radius:50%}
+
+/* footer */
+.foot{background:var(--stage);color:var(--stage-fg);padding-block:clamp(40px,6vw,72px)}
+.foot-grid{display:grid;grid-template-columns:minmax(0,1.3fr) repeat(auto-fit,minmax(200px,1fr));gap:32px}
+.foot h2{font:700 clamp(1.8rem,3.6vw,2.6rem)/1.05 var(--f-display);letter-spacing:-.02em}
+.foot h2 span{color:var(--signal)}
+.foot h3{font:500 .72rem var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--stage-accent);margin-bottom:10px}
+.foot p{color:var(--stage-muted);max-width:44ch}
+.foot .owner{font:700 1.35rem/1.2 var(--f-display);color:var(--stage-fg)}
+.foot small{display:block;margin-top:36px;padding-top:18px;border-top:1px solid var(--stage-line);color:var(--stage-muted);font-size:.8rem}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .sos i{animation:none}
+  .dept{transition:none}
+}
+</style>
+</head>
+<body>
+
+
+<header class="bar">
+  <div class="wrap bar-in">
+    <a class="brand" href="#top" aria-label="Asterline Hospital, back to top">
+      <svg width="36" height="36" viewBox="0 0 36 36" aria-hidden="true"><rect width="36" height="36" rx="11" fill="var(--accent)"/><path d="M15 8h6v7h7v6h-7v7h-6v-7H8v-6h7z" fill="var(--accent-ink)"/></svg>
+      <span>Asterline<small>Hospital</small></span>
+    </a>
+    <nav class="nav" aria-label="Primary">
+      <a href="#departments">Departments</a>
+      <a href="#book">Book a visit</a>
+      <a href="#console">Operations</a>
+    </nav>
+    <div class="bar-act">
+      <a class="sos" href="#contact"><i></i>Emergency 108</a>
+      <button class="icon-btn" id="themeBtn" type="button" aria-label="Switch between light and dark theme">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v18" /><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+<section class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow">Multispeciality hospital · Emergency open 24 hours</p>
+      <h1>Hospital care, run with <span>precision.</span></h1>
+      <p class="lede">Appointments, wards, doctors and patient records in one calm system, so your staff spend the day on people instead of paperwork.</p>
+      <div class="cta">
+        <a class="btn btn-signal" href="#book">Book an appointment</a>
+        <a class="btn btn-ghost" href="#console">See the operations console</a>
+      </div>
+      <dl class="live" aria-label="Hospital status, sample figures">
+        <div><dt>Beds open</dt><dd id="liveBeds">14</dd></div>
+        <div><dt>ER wait</dt><dd><span id="liveWait">11</span><small>min</small></dd></div>
+        <div><dt>Doctors on duty</dt><dd id="liveDocs">63</dd></div>
+      </dl>
+      <p class="live-note">Sample figures, refreshed every few seconds.</p>
+    </div>
+    <div id="stage3d" role="img" aria-label="A rotating 3D double helix wrapped around a glossy medical cross"></div>
+  </div>
+</section>
+
+<section class="sec" id="departments">
+  <div class="wrap">
+    <header class="sec-h">
+      <p class="tag">Departments</p>
+      <h2>Eight departments, one front door.</h2>
+      <p>Choose a department to start booking. Every team works from the same patient record, so nobody asks you the same question twice.</p>
+    </header>
+    <div class="dept-grid" id="deptGrid"></div>
+  </div>
+</section>
+
+<section class="sec sec-alt" id="book">
+  <div class="wrap">
+    <header class="sec-h">
+      <p class="tag">Appointments</p>
+      <h2>Book a visit in under a minute.</h2>
+      <p>Pick a department, a doctor and a time. The slip on the right updates as you go. This is a demo, so nothing is submitted.</p>
+    </header>
+    <div class="book-grid">
+      <form class="book-form" id="bookForm" novalidate>
+        <fieldset>
+          <legend><span class="step">1</span>Department</legend>
+          <div class="chips" id="deptChips"></div>
+        </fieldset>
+        <fieldset>
+          <legend><span class="step">2</span>Doctor</legend>
+          <div class="docs" id="docList"></div>
+        </fieldset>
+        <fieldset>
+          <legend><span class="step">3</span>Date</legend>
+          <div class="dates" id="dateStrip"></div>
+        </fieldset>
+        <fieldset>
+          <legend><span class="step">4</span>Time</legend>
+          <div class="slots" id="slotGrid"></div>
+        </fieldset>
+        <fieldset>
+          <legend><span class="step">5</span>Patient details</legend>
+          <div class="fields">
+            <div class="field"><label for="pName">Full name</label><input id="pName" type="text" autocomplete="name" placeholder="As on your ID"></div>
+            <div class="field"><label for="pPhone">Mobile number</label><input id="pPhone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="10-digit number"></div>
+            <div class="field"><label for="pVisit">Type of visit</label>
+              <select id="pVisit"><option>First visit</option><option>Follow-up</option><option>Second opinion</option></select>
+            </div>
+          </div>
+        </fieldset>
+        <p id="formMsg" role="alert"></p>
+      </form>
+      <aside class="ticket" id="ticket" aria-live="polite"></aside>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="console">
+  <div class="wrap">
+    <header class="sec-h">
+      <p class="tag">Operations console</p>
+      <h2>Every ward, queue and bed in one view.</h2>
+      <p>This is how the hospital team sees the day. Select any bed to open its details, or filter the emergency queue by triage level. All patient entries below are made-up samples.</p>
+    </header>
+    <dl class="kpis" id="kpis"></dl>
+    <div class="cgrid">
+      <section class="panel p-beds" aria-labelledby="bedsH">
+        <div class="panel-h"><h3 id="bedsH">Bed map</h3><div class="legend" id="bedLegend"></div></div>
+        <div class="wards" id="wards"></div>
+        <dl class="bed-detail" id="bedDetail"></dl>
+      </section>
+      <section class="panel p-chart" aria-labelledby="chartH">
+        <div class="panel-h"><h3 id="chartH">Admissions and discharges, last 7 days</h3></div>
+        <div class="chart-legend"><span><i style="background:var(--accent)"></i>Admitted</span><span><i style="background:var(--signal)"></i>Discharged</span></div>
+        <div id="chart"></div>
+      </section>
+      <section class="panel p-queue" aria-labelledby="qH">
+        <div class="panel-h"><h3 id="qH">Emergency queue</h3><div class="filters" id="qFilters"></div></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Token</th><th>Patient</th><th>Department</th><th>Triage</th><th>Wait</th><th>Status</th></tr></thead>
+            <tbody id="qBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="foot" id="contact">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h2>In an emergency, call <span>108</span>.</h2>
+        <p>108 is the national ambulance number in India. Our emergency department is open every hour of every day.</p>
+      </div>
+      <div><h3>Visiting hours</h3><p>Wards 10:00 to 12:00 and 17:00 to 19:00.<br>Outpatient 09:00 to 17:00.</p></div>
+      <div><h3>Find us</h3><p>12 Hospital Road, Your City.<br>Front desk: +91 00000 00000</p></div>
+      <div><h3>Owner</h3><p class="owner">Alen Mathew Thomas</p></div>
+    </div>
+    <small>© 2026 Alen Mathew Thomas. All rights reserved. Asterline Hospital is a fictional sample. Doctors, patients, beds and phone numbers are placeholders to replace with your own.</small>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ---------- 3D hero ---------- */
+(function(){
+  var host=document.getElementById('stage3d');
+  if(!host) return;
+  if(!window.THREE){host.classList.add('nogl');return;}
+  var T=THREE, renderer;
+  try{ renderer=new T.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'}); }
+  catch(e){ host.classList.add('nogl'); return; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  renderer.outputEncoding=T.sRGBEncoding;
+  renderer.toneMapping=T.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.08;
+  renderer.setClearColor(0x000000,0);
+  host.appendChild(renderer.domElement);
+
+  var scene=new T.Scene();
+  var camera=new T.PerspectiveCamera(32,1,0.1,100);
+  camera.position.set(0,0.3,17);
+
+  /* studio environment so glossy surfaces have something to reflect */
+  (function(){
+    var pm=new T.PMREMGenerator(renderer);
+    var env=new T.Scene();
+    env.add(new T.Mesh(new T.SphereGeometry(30,32,16),new T.MeshBasicMaterial({color:0x0c3b44,side:T.BackSide})));
+    function panel(w,h,x,y,z,c,i){
+      var m=new T.MeshBasicMaterial({color:new T.Color(c).multiplyScalar(i),side:T.DoubleSide});
+      var p=new T.Mesh(new T.PlaneGeometry(w,h),m);
+      p.position.set(x,y,z); p.lookAt(0,0,0); env.add(p);
+    }
+    panel(14,8,-12,10,10,0xffffff,6);
+    panel(6,14,14,2,6,0x7ff3ff,4);
+    panel(16,4,0,-12,8,0xff8a78,2.5);
+    panel(10,10,0,14,-14,0xbff8ff,3);
+    scene.environment=pm.fromScene(env,0.04).texture;
+  })();
+
+  scene.add(new T.AmbientLight(0xffffff,0.25));
+  var key=new T.DirectionalLight(0xffffff,1.5); key.position.set(5,8,8); scene.add(key);
+  var rim=new T.PointLight(0x4fe0e8,3,40); rim.position.set(-8,2,-4); scene.add(rim);
+  var warm=new T.PointLight(0xff7a68,2,40); warm.position.set(8,-5,4); scene.add(warm);
+
+  var rig=new T.Group(); scene.add(rig);
+  rig.rotation.z=0.16;
+  var helix=new T.Group(); rig.add(helix);
+
+  var R=2.6, H=10.5, TURNS=2.1, N=22;
+  function pt(t,ph){ var a=t*Math.PI*2*TURNS+ph; return new T.Vector3(Math.cos(a)*R,(t-0.5)*H,Math.sin(a)*R); }
+  var matA=new T.MeshPhysicalMaterial({color:0x1fd0dc,roughness:0.12,metalness:0,clearcoat:1,clearcoatRoughness:0.08,envMapIntensity:1.3});
+  var matB=new T.MeshPhysicalMaterial({color:0xeaf6f6,roughness:0.14,metalness:0,clearcoat:1,clearcoatRoughness:0.1,envMapIntensity:1.2});
+  var matRung=new T.MeshPhysicalMaterial({color:0x9fe9ef,roughness:0.25,metalness:0.1,envMapIntensity:1});
+
+  [0,Math.PI].forEach(function(ph,k){
+    var pts=[]; for(var i=0;i<=120;i++) pts.push(pt(i/120,ph));
+    helix.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts),240,0.07,12,false),k?matB:matA));
+  });
+  var sph=new T.SphereGeometry(0.25,32,24), up=new T.Vector3(0,1,0);
+  for(var i=0;i<=N;i++){
+    var t=i/N, a=pt(t,0), b=pt(t,Math.PI);
+    var sa=new T.Mesh(sph,matA); sa.position.copy(a); helix.add(sa);
+    var sb=new T.Mesh(sph,matB); sb.position.copy(b); helix.add(sb);
+    if(Math.abs(a.y)>1.8){
+      var d=new T.Vector3().subVectors(b,a), len=d.length();
+      var r=new T.Mesh(new T.CylinderGeometry(0.035,0.035,len,8),matRung);
+      r.position.copy(a).add(b).multiplyScalar(0.5);
+      r.quaternion.setFromUnitVectors(up,d.normalize());
+      helix.add(r);
+    }
+  }
+
+  /* glossy medical cross */
+  var s=new T.Shape(), w=0.55, l=1.5;
+  s.moveTo(-w,-l); s.lineTo(w,-l); s.lineTo(w,-w); s.lineTo(l,-w); s.lineTo(l,w); s.lineTo(w,w);
+  s.lineTo(w,l); s.lineTo(-w,l); s.lineTo(-w,w); s.lineTo(-l,w); s.lineTo(-l,-w); s.lineTo(-w,-w); s.closePath();
+  var cg=new T.ExtrudeGeometry(s,{depth:0.5,bevelEnabled:true,bevelThickness:0.18,bevelSize:0.16,bevelSegments:8,steps:1});
+  cg.center();
+  var cross=new T.Mesh(cg,new T.MeshPhysicalMaterial({color:0xff5a47,roughness:0.22,metalness:0.05,clearcoat:1,clearcoatRoughness:0.06,envMapIntensity:1.4}));
+  rig.add(cross);
+
+  function ring(r,rx,rz,op){
+    var m=new T.Mesh(new T.TorusGeometry(r,0.012,8,220),new T.MeshBasicMaterial({color:0x4fe0e8,transparent:true,opacity:op}));
+    m.rotation.set(rx,0,rz); rig.add(m); return m;
+  }
+  var r1=ring(4.7,1.2,0.3,0.4), r2=ring(5.6,1.9,-0.5,0.22);
+
+  var n=380, pos=new Float32Array(n*3);
+  for(var j=0;j<n;j++){
+    var rr=4+Math.random()*5, th=Math.random()*Math.PI*2, ph2=Math.acos(2*Math.random()-1);
+    pos[j*3]=rr*Math.sin(ph2)*Math.cos(th); pos[j*3+1]=rr*Math.cos(ph2)*0.9; pos[j*3+2]=rr*Math.sin(ph2)*Math.sin(th);
+  }
+  var pg=new T.BufferGeometry(); pg.setAttribute('position',new T.BufferAttribute(pos,3));
+  var dust=new T.Points(pg,new T.PointsMaterial({color:0x8ff3f8,size:0.05,transparent:true,opacity:0.75,depthWrite:false}));
+  scene.add(dust);
+
+  function size(){
+    var w=host.clientWidth||600, h=host.clientHeight||600;
+    renderer.setSize(w,h,false);
+    camera.aspect=w/h;
+    camera.position.z=camera.aspect<0.95?19.5:17;
+    camera.updateProjectionMatrix();
+  }
+  size();
+  if(window.ResizeObserver) new ResizeObserver(size).observe(host); else window.addEventListener('resize',size);
+
+  var tx=0,ty=0,cx=0,cy=0;
+  window.addEventListener('pointermove',function(e){
+    tx=(e.clientX/window.innerWidth-0.5); ty=(e.clientY/window.innerHeight-0.5);
+  },{passive:true});
+
+  var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var visible=true;
+  if(window.IntersectionObserver) new IntersectionObserver(function(es){visible=es[0].isIntersecting;}).observe(host);
+
+  function frame(t){
+    cx+=(tx-cx)*0.05; cy+=(ty-cy)*0.05;
+    helix.rotation.y=t*0.25;
+    cross.rotation.y=-t*0.35+0.5;
+    r1.rotation.z=0.3+t*0.05; r2.rotation.z=-0.5-t*0.04;
+    dust.rotation.y=t*0.02;
+    rig.rotation.y=cx*0.6; rig.rotation.x=cy*0.35;
+    rig.position.y=Math.sin(t*0.8)*0.12;
+    renderer.render(scene,camera);
+  }
+  if(reduce){ frame(2.2); return; }
+  var t0=performance.now();
+  (function loop(){
+    requestAnimationFrame(loop);
+    if(!visible||document.hidden) return;
+    frame((performance.now()-t0)/1000);
+  })();
+})();
+
+/* ---------- helpers ---------- */
+function $(s,r){return (r||document).querySelector(s);}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function pad(n){return n<10?'0'+n:''+n;}
+
+/* theme toggle */
+(function(){
+  var root=document.documentElement, mq=window.matchMedia('(prefers-color-scheme: dark)');
+  function cur(){return root.getAttribute('data-theme')||(mq.matches?'dark':'light');}
+  $('#themeBtn').addEventListener('click',function(){root.setAttribute('data-theme',cur()==='dark'?'light':'dark');});
+})();
+
+/* ---------- data ---------- */
+var IC={
+  heart:'M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10z',
+  brain:'M12 3a5 5 0 0 0-5 5v1a4 4 0 0 0 0 7 4 4 0 0 0 5 4 4 4 0 0 0 5-4 4 4 0 0 0 0-7V8a5 5 0 0 0-5-5zM12 3v18',
+  bone:'M6 6a2 2 0 1 1 3 1l8 8a2 2 0 1 1 1 3 2 2 0 1 1-3-1l-8-8a2 2 0 1 1-1-3z',
+  smile:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM9 10h.01M15 10h.01M8.5 14.5a4.5 4.5 0 0 0 7 0',
+  target:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z',
+  bolt:'M13 2L5 14h6l-1 8 8-12h-6z',
+  scan:'M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M8 12h8',
+  baby:'M12 4a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM6 20v-2a6 6 0 0 1 12 0v2'
+};
+var DEPTS=[
+  {id:'card',name:'Cardiology',tag:'Heart rhythm, blood pressure and cardiac imaging.',hours:'OPD 09:00 to 17:00',ic:'heart'},
+  {id:'neur',name:'Neurology',tag:'Stroke, epilepsy, headache and nerve disorders.',hours:'OPD 09:00 to 17:00',ic:'brain'},
+  {id:'orth',name:'Orthopaedics',tag:'Joints, fractures, sports injuries and spine care.',hours:'OPD 09:00 to 17:00',ic:'bone'},
+  {id:'paed',name:'Paediatrics',tag:'Newborns to teenagers, with a child-friendly ward.',hours:'OPD 09:00 to 17:00',ic:'smile'},
+  {id:'onco',name:'Oncology',tag:'Diagnosis, chemotherapy and radiation planning.',hours:'OPD 09:00 to 16:00',ic:'target'},
+  {id:'emer',name:'Emergency',tag:'Trauma, chest pain and urgent care at any hour.',hours:'Open 24 hours',ic:'bolt'},
+  {id:'radi',name:'Radiology',tag:'X-ray, CT, MRI and ultrasound with same-day reports.',hours:'Scans 08:00 to 20:00',ic:'scan'},
+  {id:'mate',name:'Maternity',tag:'Antenatal visits, delivery suites and neonatal care.',hours:'OPD 09:00 to 17:00',ic:'baby'}
+];
+var DOCS=[
+  {id:'d1',dept:'card',name:'Dr. Anjali Menon',q:'MD, DM Cardiology',y:14},
+  {id:'d2',dept:'card',name:'Dr. Rohit Varma',q:'MD, DNB Cardiology',y:9},
+  {id:'d3',dept:'neur',name:'Dr. Sana Qureshi',q:'MD, DM Neurology',y:12},
+  {id:'d4',dept:'neur',name:'Dr. Vikram Nair',q:'MD, DNB Neurology',y:8},
+  {id:'d5',dept:'orth',name:'Dr. Arjun Pillai',q:'MS Orthopaedics',y:16},
+  {id:'d6',dept:'orth',name:'Dr. Meera Iyer',q:'MS, MCh Orthopaedics',y:10},
+  {id:'d7',dept:'paed',name:'Dr. Farah Khan',q:'MD Paediatrics',y:11},
+  {id:'d8',dept:'paed',name:'Dr. Thomas Joseph',q:'MD, DCH Paediatrics',y:7},
+  {id:'d9',dept:'onco',name:'Dr. Leela Krishnan',q:'MD, DM Medical Oncology',y:15},
+  {id:'d10',dept:'onco',name:'Dr. Imran Sheikh',q:'MD Radiation Oncology',y:9},
+  {id:'d11',dept:'emer',name:'Dr. Priya Raman',q:'MD Emergency Medicine',y:10},
+  {id:'d12',dept:'emer',name:'Dr. Daniel George',q:'MD Emergency Medicine',y:6},
+  {id:'d13',dept:'radi',name:'Dr. Kavita Rao',q:'MD Radiodiagnosis',y:13},
+  {id:'d14',dept:'radi',name:'Dr. Sajan Mathew',q:'DNB Radiodiagnosis',y:8},
+  {id:'d15',dept:'mate',name:'Dr. Nisha Thomas',q:'MD, DGO Obstetrics',y:12},
+  {id:'d16',dept:'mate',name:'Dr. Rekha Bose',q:'MS Obstetrics and Gynaecology',y:17}
+];
+function dept(id){return DEPTS.filter(function(d){return d.id===id;})[0];}
+function doc(id){return DOCS.filter(function(d){return d.id===id;})[0];}
+function initials(n){return n.replace('Dr. ','').split(' ').map(function(p){return p[0];}).join('').slice(0,2);}
+function svgIc(k){return '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+IC[k]+'"/></svg>';}
+
+/* ---------- live strip ---------- */
+(function(){
+  var wait=11, beds=14, docs=63;
+  setInterval(function(){
+    wait=Math.max(6,Math.min(19,wait+(Math.random()<0.5?-1:1)));
+    beds=Math.max(9,Math.min(20,beds+(Math.random()<0.5?-1:1)));
+    docs=Math.max(58,Math.min(67,docs+(Math.random()<0.3?(Math.random()<0.5?-1:1):0)));
+    $('#liveWait').textContent=wait; $('#liveBeds').textContent=beds; $('#liveDocs').textContent=docs;
+  },3500);
+})();
+
+/* ---------- departments ---------- */
+var S={dept:'card',doc:'d1',date:0,slot:null,done:null};
+(function(){
+  var g=$('#deptGrid');
+  g.innerHTML=DEPTS.map(function(d){
+    return '<button type="button" class="dept" data-id="'+d.id+'" aria-label="Book '+d.name+'"><span class="ico">'+svgIc(d.ic)+'</span><h3>'+d.name+'</h3><p>'+d.tag+'</p><span class="meta"><span>'+d.hours+'</span><b>Book →</b></span></button>';
+  }).join('');
+  var fine=window.matchMedia&&matchMedia('(hover: hover)').matches&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
+  Array.prototype.forEach.call(g.children,function(c){
+    c.addEventListener('click',function(){
+      S.dept=c.getAttribute('data-id'); S.doc=DOCS.filter(function(x){return x.dept===S.dept;})[0].id; S.slot=null; S.done=null;
+      renderBook(); document.getElementById('book').scrollIntoView({behavior:'smooth'});
+    });
+    if(fine){
+      c.addEventListener('pointermove',function(e){
+        var r=c.getBoundingClientRect(), x=(e.clientX-r.left)/r.width-0.5, y=(e.clientY-r.top)/r.height-0.5;
+        c.style.transform='rotateX('+(-y*9).toFixed(2)+'deg) rotateY('+(x*11).toFixed(2)+'deg) translateZ(6px)';
+      });
+      c.addEventListener('pointerleave',function(){c.style.transform='';});
+    }
+  });
+})();
+
+/* ---------- booking ---------- */
+var DAYS=[], WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+(function(){
+  var now=new Date();
+  for(var i=0;i<7;i++){ var d=new Date(now.getFullYear(),now.getMonth(),now.getDate()+i); DAYS.push(d); }
+})();
+var TIMES=[]; for(var h=9;h<=16;h++){ TIMES.push(pad(h)+':00'); TIMES.push(pad(h)+':30'); }
+function iso(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function slotState(docId,dayIdx,time){
+  if(dayIdx===0){
+    var n=new Date(), mins=n.getHours()*60+n.getMinutes()+30, p=time.split(':');
+    if(+p[0]*60+ +p[1]<=mins) return 'past';
+  }
+  return hash(docId+iso(DAYS[dayIdx])+time)%100<34?'busy':'free';
+}
+function renderBook(){
+  $('#deptChips').innerHTML=DEPTS.map(function(d){return '<button type="button" class="chip" data-d="'+d.id+'" aria-pressed="'+(d.id===S.dept)+'">'+d.name+'</button>';}).join('');
+  $('#docList').innerHTML=DOCS.filter(function(d){return d.dept===S.dept;}).map(function(d){
+    return '<button type="button" class="doc" data-doc="'+d.id+'" aria-pressed="'+(d.id===S.doc)+'"><span class="av">'+initials(d.name)+'</span><span><b>'+d.name+'</b><span>'+d.q+'</span><span>'+d.y+' years of practice</span></span></button>';
+  }).join('');
+  $('#dateStrip').innerHTML=DAYS.map(function(d,i){
+    return '<button type="button" class="date" data-i="'+i+'" aria-pressed="'+(i===S.date)+'" aria-label="'+WD[d.getDay()]+' '+d.getDate()+' '+MO[d.getMonth()]+(i===0?', today':'')+'"><small>'+(i===0?'Today':WD[d.getDay()])+'</small><b>'+d.getDate()+'</b><small>'+MO[d.getMonth()]+'</small></button>';
+  }).join('');
+  $('#slotGrid').innerHTML=TIMES.map(function(t){
+    var st=slotState(S.doc,S.date,t);
+    return '<button type="button" class="slot" data-t="'+t+'" aria-pressed="'+(S.slot===t)+'"'+(st!=='free'?' disabled':'')+'>'+t+'</button>';
+  }).join('');
+  renderTicket();
+}
+function renderTicket(){
+  var t=$('#ticket');
+  if(S.done){
+    t.innerHTML='<div class="ticket-h"><b>Appointment held</b><span>Demo</span></div><div class="ticket-b"><p class="note">Your reference number is below. Nothing was sent to a hospital, because this is a demo page.</p><div class="ref" id="refTxt">'+S.done+'</div><button type="button" class="btn btn-line" id="copyRef">Copy reference</button><button type="button" class="btn btn-line" id="again">Book another visit</button></div>';
+    return;
+  }
+  var d=dept(S.dept), dc=doc(S.doc), day=DAYS[S.date];
+  var name=$('#pName').value.trim(), visit=$('#pVisit').value;
+  function row(k,v){return '<div><dt>'+k+'</dt><dd'+(v?'':' class="empty"')+'>'+(v?esc(v):'Not chosen yet')+'</dd></div>';}
+  t.innerHTML='<div class="ticket-h"><b>Appointment slip</b><span>Draft</span></div><div class="ticket-b"><dl>'+
+    row('Department',d.name)+row('Doctor',dc.name)+row('Date',WD[day.getDay()]+' '+day.getDate()+' '+MO[day.getMonth()])+row('Time',S.slot)+row('Patient',name)+row('Visit',visit)+
+    '</dl><button type="submit" form="bookForm" class="btn btn-signal">Hold this appointment</button><p class="note">Demo only. Nothing is submitted or stored.</p></div>';
+}
+(function(){
+  var f=$('#bookForm');
+  f.addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    if(b.hasAttribute('data-d')){ S.dept=b.getAttribute('data-d'); S.doc=DOCS.filter(function(x){return x.dept===S.dept;})[0].id; S.slot=null; }
+    else if(b.hasAttribute('data-doc')){ S.doc=b.getAttribute('data-doc'); S.slot=null; }
+    else if(b.hasAttribute('data-i')){ S.date=+b.getAttribute('data-i'); S.slot=null; }
+    else if(b.hasAttribute('data-t')){ S.slot=b.getAttribute('data-t'); }
+    else return;
+    $('#formMsg').textContent='';
+    renderBook();
+  });
+  f.addEventListener('input',renderTicket);
+  f.addEventListener('submit',function(e){
+    e.preventDefault();
+    var name=$('#pName').value.trim(), ph=$('#pPhone').value.replace(/\D/g,''), msg=$('#formMsg');
+    if(!S.slot){msg.textContent='Choose a time slot to continue.';return;}
+    if(name.length<2){msg.textContent='Enter the patient’s full name.';$('#pName').focus();return;}
+    if(ph.length!==10){msg.textContent='Enter a 10-digit mobile number.';$('#pPhone').focus();return;}
+    msg.textContent='';
+    S.done='AST-'+Math.random().toString(36).slice(2,7).toUpperCase();
+    renderTicket();
+  });
+  $('#ticket').addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    if(b.id==='again'){ S.done=null; S.slot=null; renderBook(); }
+    if(b.id==='copyRef'){
+      var el=$('#refTxt');
+      function sel(){var r=document.createRange();r.selectNodeContents(el);var s=window.getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Selected, press copy';}
+      try{ navigator.clipboard.writeText(el.textContent).then(function(){b.textContent='Copied';},sel); }catch(err){ sel(); }
+    }
+  });
+  renderBook();
+})();
+
+/* ---------- operations console ---------- */
+var WARDS=[{id:'GM',name:'General Medicine'},{id:'SU',name:'Surgical'},{id:'IC',name:'Intensive Care'},{id:'MT',name:'Maternity'}];
+var BEDS=[];
+(function(){
+  var r=rng(20261005), L='ABCDEHJKLMNPRSTV', names=DOCS.map(function(d){return d.name;});
+  WARDS.forEach(function(w,wi){
+    for(var i=1;i<=12;i++){
+      var p=r(), occ=w.id==='IC'?0.8:0.62, s;
+      if(p<occ) s='occupied'; else if(p<occ+0.08) s='cleaning'; else if(p<occ+0.15) s='reserved'; else s='available';
+      var mat=w.id==='MT';
+      BEDS.push({id:w.id+'-'+pad(i),ward:w.name,s:s,
+        who:L[Math.floor(r()*L.length)]+'.'+L[Math.floor(r()*L.length)]+'., '+(mat?22+Math.floor(r()*16):18+Math.floor(r()*68))+' '+(mat||r()<0.5?'F':'M'),
+        doc:names[Math.floor(r()*names.length)],
+        adm:Math.floor(r()*9), dis:1+Math.floor(r()*5)});
+    }
+  });
+})();
+var QUEUE=[
+  {tok:'ER-0412',who:'M.S., 61 F',dept:'Cardiology',tri:'Critical',wait:0,st:'In resuscitation'},
+  {tok:'ER-0413',who:'A.N., 7 M',dept:'Paediatrics',tri:'Urgent',wait:6,st:'Waiting'},
+  {tok:'ER-0414',who:'J.T., 34 M',dept:'Orthopaedics',tri:'Urgent',wait:12,st:'X-ray in progress'},
+  {tok:'ER-0415',who:'S.P., 29 F',dept:'Maternity',tri:'Urgent',wait:9,st:'Under assessment'},
+  {tok:'ER-0416',who:'V.K., 48 M',dept:'Neurology',tri:'Standard',wait:21,st:'Waiting'},
+  {tok:'ER-0417',who:'L.D., 72 F',dept:'Radiology',tri:'Standard',wait:17,st:'CT scheduled'},
+  {tok:'ER-0418',who:'H.B., 19 M',dept:'Orthopaedics',tri:'Standard',wait:26,st:'Waiting'},
+  {tok:'ER-0419',who:'R.M., 56 F',dept:'Oncology',tri:'Standard',wait:33,st:'Review pending'}
+];
+var STATUS_LABEL={occupied:'Occupied',available:'Available',cleaning:'Being cleaned',reserved:'Reserved'};
+var selBed=null, triF='All';
+(function(){
+  var counts={occupied:0,available:0,cleaning:0,reserved:0};
+  BEDS.forEach(function(b){counts[b.s]++;});
+  var occPct=Math.round(counts.occupied/BEDS.length*100);
+  var waiting=QUEUE.filter(function(q){return q.wait>0;}).length;
+  $('#kpis').innerHTML=
+    '<div class="kpi"><dt>Bed occupancy</dt><dd>'+occPct+'<small>%</small></dd><div class="bar-m"><i style="width:'+occPct+'%"></i></div></div>'+
+    '<div class="kpi"><dt>Beds open</dt><dd>'+counts.available+'<small>of '+BEDS.length+'</small></dd></div>'+
+    '<div class="kpi"><dt>In ER queue</dt><dd>'+waiting+'<small>waiting</small></dd></div>'+
+    '<div class="kpi"><dt>Discharges today</dt><dd>17<small>so far</small></dd></div>';
+  $('#bedLegend').innerHTML=['occupied','available','cleaning','reserved'].map(function(k){
+    return '<span><i class="sw '+k+'"></i>'+STATUS_LABEL[k]+' '+counts[k]+'</span>';
+  }).join('');
+  $('#wards').innerHTML=WARDS.map(function(w){
+    var bs=BEDS.filter(function(b){return b.id.indexOf(w.id+'-')===0;});
+    var o=bs.filter(function(b){return b.s==='occupied';}).length;
+    return '<div class="ward"><h4><span>'+w.name+'</span><span>'+o+'/'+bs.length+'</span></h4><div class="beds">'+
+      bs.map(function(b){return '<button type="button" class="bed" data-id="'+b.id+'" data-s="'+b.s+'" aria-pressed="false" aria-label="Bed '+b.id+', '+STATUS_LABEL[b.s]+'">'+b.id.slice(3)+'</button>';}).join('')+'</div></div>';
+  }).join('');
+  function pick(id){
+    selBed=id;
+    Array.prototype.forEach.call(document.querySelectorAll('.bed'),function(x){x.setAttribute('aria-pressed',x.getAttribute('data-id')===id);});
+    var b=BEDS.filter(function(x){return x.id===id;})[0], occ=b.s==='occupied';
+    function it(k,v){return '<div><dt>'+k+'</dt><dd>'+v+'</dd></div>';}
+    $('#bedDetail').innerHTML=it('Bed',b.id)+it('Ward',b.ward)+it('Status',STATUS_LABEL[b.s])+
+      (occ?it('Patient',esc(b.who))+it('Consultant',esc(b.doc))+it('Admitted',b.adm===0?'Today':b.adm+' days ago')+it('Expected discharge','In '+b.dis+(b.dis===1?' day':' days')):
+      it('Patient','None')+it('Next step',b.s==='available'?'Ready for admission':b.s==='cleaning'?'Housekeeping in progress':'Held for a planned admission'));
+  }
+  $('#wards').addEventListener('click',function(e){var b=e.target.closest('.bed'); if(b) pick(b.getAttribute('data-id'));});
+  pick(BEDS.filter(function(b){return b.s==='occupied';})[2].id);
+})();
+
+/* chart, drawn to scale */
+(function(){
+  var W=560,Hh=250,m={l:34,r:40,t:14,b:30}, adm=[41,46,38,52,57,49,53], dis=[36,40,43,44,48,51,47], ymax=60;
+  var pw=W-m.l-m.r, ph=Hh-m.t-m.b;
+  function x(i){return m.l+i*pw/6;}
+  function y(v){return m.t+ph-v/ymax*ph;}
+  function line(a){return a.map(function(v,i){return (i?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1);}).join(' ');}
+  var now=new Date(), labels=[];
+  for(var i=6;i>=0;i--){var d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-i);labels.push(WD[d.getDay()]);}
+  var g='';
+  [0,20,40,60].forEach(function(v){g+='<line class="grid" x1="'+m.l+'" x2="'+(W-m.r)+'" y1="'+y(v)+'" y2="'+y(v)+'"/><text class="tick" x="'+(m.l-8)+'" y="'+(y(v)+4)+'" text-anchor="end">'+v+'</text>';});
+  var xl=labels.map(function(t,i){return '<text class="tick" x="'+x(i)+'" y="'+(Hh-8)+'" text-anchor="middle">'+t+'</text>';}).join('');
+  var area=line(adm)+' L'+x(6)+' '+y(0)+' L'+x(0)+' '+y(0)+' Z';
+  var li=6;
+  $('#chart').innerHTML='<svg viewBox="0 0 '+W+' '+Hh+'" role="img" aria-label="Line chart of daily admissions and discharges over seven days. Admissions ended at '+adm[6]+' and discharges at '+dis[6]+'.">'+g+xl+
+    '<path class="a-adm" d="'+area+'"/><path class="l-dis" d="'+line(dis)+'"/><path class="l-adm" d="'+line(adm)+'"/>'+
+    '<circle class="dot-dis" cx="'+x(li)+'" cy="'+y(dis[li])+'" r="5"/><circle class="dot-adm" cx="'+x(li)+'" cy="'+y(adm[li])+'" r="5"/>'+
+    '<text class="val" fill="var(--accent)" x="'+(x(li)+10)+'" y="'+(y(adm[li])+4)+'">'+adm[li]+'</text>'+
+    '<text class="val" fill="var(--signal)" x="'+(x(li)+10)+'" y="'+(y(dis[li])+14)+'">'+dis[li]+'</text></svg>';
+})();
+
+/* ER queue */
+(function(){
+  var cls={Critical:'crit',Urgent:'urg',Standard:'std'};
+  function draw(){
+    $('#qFilters').innerHTML=['All','Critical','Urgent','Standard'].map(function(f){return '<button type="button" class="chip" data-f="'+f+'" aria-pressed="'+(f===triF)+'">'+f+'</button>';}).join('');
+    $('#qBody').innerHTML=QUEUE.filter(function(q){return triF==='All'||q.tri===triF;}).map(function(q){
+      return '<tr><td class="num">'+q.tok+'</td><td>'+q.who+'</td><td>'+q.dept+'</td><td><span class="pill '+cls[q.tri]+'">'+q.tri+'</span></td><td class="num">'+q.wait+' min</td><td>'+q.st+'</td></tr>';
+    }).join('');
+  }
+  $('#qFilters').addEventListener('click',function(e){var b=e.target.closest('button'); if(!b) return; triF=b.getAttribute('data-f'); draw();});
+  draw();
+})();
+</script>
+
+</body>
+</html>
